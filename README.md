@@ -1,4 +1,4 @@
-## 🚀 Project Title: DeFiGenius — Personalized, Trustless Borrowing with Agentic AI & Web3 Interop
+# 🚀 Project Title: DeFiGenius — Personalized, Trustless Borrowing with Agentic AI & Web3 Interop
 
 # 🔍 Problem Statement
 Access to DeFi lending is fragmented, non-personalized, and intimidating to non-experts. Risk evaluation is basic, and users often don’t understand loan terms or their own creditworthiness. Borrowers lack clarity and confidence, while DAOs struggle with fraud or defaults.
@@ -8,7 +8,7 @@ Create the most intelligent, user-friendly, and transparent DeFi loan platform p
 
 # 🎯 Core Innovations
 
-Agentic Borrower Experience
+## Agentic Borrower Experience
 
 LLM-powered agents assist users in navigating the borrowing process.
 
@@ -22,13 +22,13 @@ Helping pick best-fit loan options
 
 Personalized recommendations: duration, amount, interest optimized for their profile.
 
-AI Credit Scoring Engine
+## AI Credit Scoring Engine
 
 Uses both on-chain (wallet history, txns, staking) and off-chain data (intent, income, risk behavior) to generate a score.
 
 Output: AI-generated structured JSON → { score, risk_rating, explainability }
 
-Fraud Risk Detection
+## Fraud Risk Detection
 
 Agent evaluates patterns of suspicious behavior using heuristics + AI:
 
@@ -36,13 +36,13 @@ Repeated loan rejections, synthetic wallet behavior
 
 NLP-based detection of misleading loan intents
 
-DAO Dispute Mechanism
+## DAO Dispute Mechanism
 
 DAO members can view flagged loans and override AI-based decisions via voting.
 
 Voting influenced by AI recommendation + prior behavior.
 
-NFT-QR Agreement System
+## NFT-QR Agreement System
 
 Loan agreement minted as dynamic NFT → contains on-chain metadata.
 
@@ -50,7 +50,7 @@ QR code links to borrower agreement + current repayment status.
 
 Useful for wallets, loan book tracking, integrations.
 
-Cross-platform UX
+## Cross-platform UX
 
 Solana-based mobile-first DApp built with React Native
 
@@ -58,7 +58,7 @@ Chatbot interface embedded via W3C Web Component for reusability
 
 Accessible Progressive Web App with full WCAG + W3C compliance
 
-Smart Contract Stack (Solana)
+## Smart Contract Stack (Solana)
 
 LoanProgram: Main program for applying, repaying loans.
 
@@ -68,7 +68,7 @@ NFTAgreement: Mints agreement as NFT on Solana NFT standard.
 
 DAOProgram: For flag voting, community overrides, and treasury.
 
-Solana Benefits
+## Solana Benefits
 
 Near-instant low-cost txns → ideal for micro-lending and high user interactions
 
