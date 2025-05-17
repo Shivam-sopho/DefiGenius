@@ -1,0 +1,1 @@
+/media/shivam/Developmet\ Work/SolanaAIHackathon/quiz-genie-time-test/src/solana/program/target/sbf-solana-solana/release/loan_program.so: /media/shivam/Developmet\ Work/SolanaAIHackathon/quiz-genie-time-test/src/solana/program/src/lib.rs /media/shivam/Developmet\ Work/SolanaAIHackathon/quiz-genie-time-test/src/solana/program/src/loan_program.rs

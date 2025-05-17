@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -24,6 +25,13 @@ export default {
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
+				quiz: {
+					primary: '#4F46E5',
+					secondary: '#7C3AED',
+					accent: '#C4B5FD',
+					light: '#F5F3FF',
+					dark: '#2E1065',
+				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'
@@ -62,6 +70,10 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				}
+			},
+			backgroundImage: {
+				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+				'quiz-gradient': 'linear-gradient(to right, #4F46E5, #7C3AED)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
