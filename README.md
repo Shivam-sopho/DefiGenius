@@ -1,33 +1,159 @@
-# Welcome to your Lovable project
+## 🚀 Project Title: DeFiGenius — Personalized, Trustless Borrowing with Agentic AI & Web3 Interop
+
+# 🔍 Problem Statement
+Access to DeFi lending is fragmented, non-personalized, and intimidating to non-experts. Risk evaluation is basic, and users often don’t understand loan terms or their own creditworthiness. Borrowers lack clarity and confidence, while DAOs struggle with fraud or defaults.
+
+# 🧠 Our Vision
+Create the most intelligent, user-friendly, and transparent DeFi loan platform powered by LLMs, personalized agents, and modular smart contracts — using Solana for scale and performance.
+
+# 🎯 Core Innovations
+
+Agentic Borrower Experience
+
+LLM-powered agents assist users in navigating the borrowing process.
+
+Chatbot embedded in mobile app and web guides the user:
+
+Understanding their credit score
+
+Clarifying terms of the smart contract (in natural language)
+
+Helping pick best-fit loan options
+
+Personalized recommendations: duration, amount, interest optimized for their profile.
+
+AI Credit Scoring Engine
+
+Uses both on-chain (wallet history, txns, staking) and off-chain data (intent, income, risk behavior) to generate a score.
+
+Output: AI-generated structured JSON → { score, risk_rating, explainability }
+
+Fraud Risk Detection
+
+Agent evaluates patterns of suspicious behavior using heuristics + AI:
+
+Repeated loan rejections, synthetic wallet behavior
+
+NLP-based detection of misleading loan intents
+
+DAO Dispute Mechanism
+
+DAO members can view flagged loans and override AI-based decisions via voting.
+
+Voting influenced by AI recommendation + prior behavior.
+
+NFT-QR Agreement System
+
+Loan agreement minted as dynamic NFT → contains on-chain metadata.
+
+QR code links to borrower agreement + current repayment status.
+
+Useful for wallets, loan book tracking, integrations.
+
+Cross-platform UX
+
+Solana-based mobile-first DApp built with React Native
+
+Chatbot interface embedded via W3C Web Component for reusability
+
+Accessible Progressive Web App with full WCAG + W3C compliance
+
+Smart Contract Stack (Solana)
+
+LoanProgram: Main program for applying, repaying loans.
+
+RiskOracle: Accepts off-chain risk scores via Chainlink /acles or oracles.
+
+NFTAgreement: Mints agreement as NFT on Solana NFT standard.
+
+DAOProgram: For flag voting, community overrides, and treasury.
+
+Solana Benefits
+
+Near-instant low-cost txns → ideal for micro-lending and high user interactions
+
+Composability with DeFi programs (like Jupiter aggregator)
+
+NFT support, oracles, wallet integration
+
+# 📲 User Flow
+
+User connects Phantom or Solflare wallet.
+
+Agent walks through application via chat interface.
+
+Inputs analyzed by AI for creditworthiness and fraud risk.
+
+Smart contract is invoked → LoanApproved or Rejected.
+
+NFT is minted as borrower’s agreement with QR.
+
+Repayment tracked on-chain; notifications sent via webhooks/email/chat.
+
+DAO can view and override flagged cases.
+
+# 📦 AI Stack
+
+LangChain + FastAPI backend for orchestrating LLM prompts
+
+GPT-4 for credit evaluation, fraud scoring, explainability
+
+Fine-tuned personalization layer (Agent Memory)
+
+Vector DB for storing borrower context
+
+OpenAI Function Calling → Structured Outputs for Solana contracts
+
+# 📈 Future Roadmap
+
+Agent-to-agent negotiation between borrowers and lenders
+
+zkCreditProofs: Use ZK to prove off-chain behavior without leaking data
+
+AI-powered DAO: Let agents propose loan terms based on market + borrower trend
+
+Full integration with DID standards and soulbound credentials
+
+Auto-scaling on Solana Layer 2 for global microfinance
+
+# 📊 Impact & Learning Potential
+
+Fuses AI and DeFi in a tangible, real-world way
+
+Teaches users financial literacy interactively
+
+Pushes forward AI-assisted smart contract interaction
+
+Builds trust in decentralized lending systems
+
+# 🎓 Compliance & Interoperability
+
+Uses W3C Web Components for frontend widget reuse
+
+Aligns with WCAG accessibility standards
+
+Explores DID + Verifiable Credentials for future compliance
+
+
+
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/4ad2887e-8ef0-4420-84ef-cf17515d309c
+**Working Demo Live Link**: https://quiz-genie-time-test.lovable.app/
 
-## How can I edit this code?
 
-There are several ways of editing your application.
+If you want to work locally using your own IDE, you can clone this repo. 
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/4ad2887e-8ef0-4420-84ef-cf17515d309c) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+The only requirement is having Node.js & npm installed & Phanthom Wallet Installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
 Follow these steps:
 
 ```sh
 # Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+git clone https://github.com/Shivam-sopho/DefiGenius
 
 # Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+cd DefiGenius
 
 # Step 3: Install the necessary dependencies.
 npm i
@@ -35,20 +161,6 @@ npm i
 # Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
 
 ## What technologies are used for this project?
 
@@ -59,15 +171,9 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- Solana
+- Cargo for Building 
+- GenAI for Calling LLMs
+- Prompt Engineering 
 
-## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/4ad2887e-8ef0-4420-84ef-cf17515d309c) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
