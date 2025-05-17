@@ -10,11 +10,12 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useLoans } from "@/hooks/useLoans";
 import { LoanApplication } from "@/services/loanProgramService";
 import { useProgramFund } from "@/hooks/useProgramFund";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 export default function Dashboard() {
   const { connected, publicKey } = useWallet();
   const { balance, isLoading, requestAirdrop } = useSolanaWallet();
-  const { loans, isLoading: isLoadingLoans } = useLoans();
+  const { loans, isLoading: isLoadingLoans, transactions } = useLoans();
   const { fundProgram, isLoading: isFunding } = useProgramFund();
 
   // Format a loan status into a component with the appropriate styling
@@ -37,9 +38,10 @@ export default function Dashboard() {
     );
   };
 
-  // Calculate total loan value
+  // Calculate total loan value in SOL
   const calculateTotalLoanValue = (loans: LoanApplication[]) => {
-    return loans.reduce((total, loan) => total + loan.amount, 0);
+    const totalLamports = loans.reduce((total, loan) => total + loan.amount, 0);
+    return (totalLamports / LAMPORTS_PER_SOL).toFixed(2);
   };
 
   // Generate a simulated credit score for the user
@@ -98,7 +100,7 @@ export default function Dashboard() {
               <Button onClick={requestAirdrop} disabled={isLoading}>
                 Request 1 SOL Airdrop (Devnet)
               </Button>
-              <Button onClick={() => fundProgram(1)} disabled={isFunding}>
+              <Button onClick={() => fundProgram(1 * LAMPORTS_PER_SOL)} disabled={isFunding}>
                 Fund Program with 1 SOL
               </Button>
             </CardFooter>
@@ -142,7 +144,7 @@ export default function Dashboard() {
                   <>
                     <div className="text-2xl font-bold">{loans.length}</div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Total value: {calculateTotalLoanValue(loans)} USDC
+                      Total value: {calculateTotalLoanValue(loans)} SOL
                     </p>
                     <Progress value={65} className="mt-3" indicatorColor="bg-amber-500" />
                   </>
@@ -171,7 +173,7 @@ export default function Dashboard() {
               <CardTitle className="text-sm font-medium">Available Credit</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{connected ? `${creditScore * 5} USDC` : "-"}</div>
+              <div className="text-2xl font-bold">{connected ? `${(creditScore * 5 / LAMPORTS_PER_SOL).toFixed(2)} SOL` : "-"}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 Based on your current blockchain credit score
               </p>
@@ -225,14 +227,14 @@ export default function Dashboard() {
                       {loans.map((loan) => (
                         <tr key={loan.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                           <td className="p-4 align-middle">{loan.id}</td>
-                          <td className="p-4 align-middle">{loan.amount} USDC</td>
+                          <td className="p-4 align-middle">{(loan.amount / LAMPORTS_PER_SOL).toFixed(2)} SOL</td>
                           <td className="p-4 align-middle">{loan.termDays} days</td>
                           <td className="p-4 align-middle">
                             {formatLoanStatus(loan.status)}
                           </td>
                           <td className="p-4 align-middle">
                             <Button size="sm" variant="outline" asChild>
-                              <Link to={`/loan/${loan.id}`}>View</Link>
+                              <Link to={`/loans`}>View</Link>
                             </Button>
                           </td>
                         </tr>
@@ -254,48 +256,49 @@ export default function Dashboard() {
               )}
             </TabsContent>
             <TabsContent value="history" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Payment History</CardTitle>
-                  <CardDescription>Your recent loan payment history from the blockchain</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {connected ? (
-                    <p className="text-center text-muted-foreground py-4">No payment history found for this wallet</p>
-                  ) : (
-                    <p className="text-center text-muted-foreground py-4">Connect your wallet to view payment history</p>
-                  )}
-                </CardContent>
-              </Card>
+              {!connected ? (
+                <Card>
+                  <CardContent className="py-8">
+                    <p className="text-center text-muted-foreground">Connect your wallet to view transaction history</p>
+                  </CardContent>
+                </Card>
+              ) : transactions.length > 0 ? (
+                <div className="rounded-md border">
+                  <table className="w-full caption-bottom text-sm">
+                    <thead className="[&_tr]:border-b">
+                      <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Type</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Amount</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">From</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">To</th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="[&_tr:last-child]:border-0">
+                      {transactions.map((tx) => (
+                        <tr key={tx.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                          <td className="p-4 align-middle">{tx.type}</td>
+                          <td className="p-4 align-middle">{(tx.amount / LAMPORTS_PER_SOL).toFixed(2)} SOL</td>
+                          <td className="p-4 align-middle">{tx.from.slice(0, 4)}...{tx.from.slice(-4)}</td>
+                          <td className="p-4 align-middle">{tx.to.slice(0, 4)}...{tx.to.slice(-4)}</td>
+                          <td className="p-4 align-middle">{new Date(tx.timestamp).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="py-8">
+                    <p className="text-center text-muted-foreground">No transaction history available</p>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
             <TabsContent value="recommendations" className="mt-6">
               <Card>
-                <CardHeader>
-                  <CardTitle>AI Personalized Recommendations</CardTitle>
-                  <CardDescription>Based on your profile and blockchain data</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {connected ? (
-                    <>
-                      <div className="border rounded-lg p-4 bg-muted/30">
-                        <h4 className="font-medium">Optimize your loan strategy</h4>
-                        <p className="text-muted-foreground text-sm mt-1">
-                          Based on your on-chain activity, we recommend applying for a small loan first to build credit history.
-                        </p>
-                        <Button variant="link" className="p-0 h-auto mt-2">Learn more</Button>
-                      </div>
-                      <div className="border rounded-lg p-4 bg-muted/30">
-                        <h4 className="font-medium">Improve your credit score</h4>
-                        <p className="text-muted-foreground text-sm mt-1">
-                          Consider staking 200 USDC for 30 days to increase your on-chain reputation and boost your
-                          credit score by approximately 15-20 points.
-                        </p>
-                        <Button variant="link" className="p-0 h-auto mt-2">Take action</Button>
-                      </div>
-                    </>
-                  ) : (
-                    <p className="text-center text-muted-foreground py-4">Connect your wallet to view personalized recommendations</p>
-                  )}
+                <CardContent className="py-8">
+                  <p className="text-center text-muted-foreground">Recommendations coming soon</p>
                 </CardContent>
               </Card>
             </TabsContent>

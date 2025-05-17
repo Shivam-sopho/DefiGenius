@@ -1,4 +1,3 @@
-
 import {
   Connection,
   PublicKey,
@@ -11,6 +10,7 @@ import {
 import * as borsh from 'borsh';
 import { Buffer } from 'buffer';
 import { toast } from "@/components/ui/use-toast";
+import { simulationService, LoanTransaction } from './simulationService';
 
 // Define the loan program ID - this would be the address of your deployed program
 // You need to replace this with your actual deployed program ID
@@ -100,100 +100,120 @@ export const loanProgramService = {
   // Create a new loan application
   async createLoanApplication(
     wallet: any,
-    amount: number, // This is now directly in lamports
+    amount: number,
     termDays: number,
     purpose: string
   ): Promise<string> {
     try {
-      console.log(`Creating loan application: ${amount} lamports, ${termDays} days, purpose: ${purpose}`);
-      
       if (!wallet.publicKey) throw new Error("Wallet not connected");
 
-      // Find the loan account PDA
-      const [loanAccountPDA] = await this.findLoanAccountAddress(wallet.publicKey);
+      // Create a unique loan ID
+      const loanId = `L-${wallet.publicKey.toString().substring(0, 4)}-${Date.now()}`;
       
-      // Create the loan application data
-      const loanData = new LoanApplicationData({
-        amount: amount, // Direct lamports amount
-        termDays: termDays, 
-        creditScore: 700 // Default credit score
-      });
-      
-      console.log("Loan data to be serialized:", JSON.stringify(loanData, (_, v) => typeof v === 'bigint' ? v.toString() : v));
-      
-      // Serialize the loan data using borsh
-      const serializedData = borsh.serialize(
-        loanApplicationSchema,
-        loanData
-      );
-      
-      console.log("Serialized data length:", serializedData.length);
-      
-      // Create instruction data with the LoanInstructionType as the first byte
-      const dataBuffer = Buffer.alloc(serializedData.length + 1);
-      dataBuffer[0] = LoanInstructionType.Initialize;
-      
-      // Copy serialized data into the buffer at position 1
-      for (let i = 0; i < serializedData.length; i++) {
-        dataBuffer[i + 1] = serializedData[i];
-      }
-      
-      // Create the transaction instruction
-      const instruction = new TransactionInstruction({
-        keys: [
-          { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
-          { pubkey: loanAccountPDA, isSigner: false, isWritable: true },
-          { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-        ],
-        programId: LOAN_PROGRAM_ID,
-        data: dataBuffer,
-      });
-      
-      // Create and send transaction
-      const transaction = new Transaction().add(instruction);
-      
-      // Get the latest blockhash
-      const { blockhash } = await connection.getLatestBlockhash();
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = wallet.publicKey;
-      
-      try {
-        // Sign and send transaction
-        console.log("Sending transaction to wallet for signature...");
-        const signature = await wallet.sendTransaction(transaction, connection);
-        
-        console.log("Transaction sent, waiting for confirmation...");
-        // Confirm transaction
-        await connection.confirmTransaction(signature, 'confirmed');
-        
-        console.log("Loan application created with signature:", signature);
+      // Create loan application
+      const loan: LoanApplication = {
+        id: loanId,
+        borrower: wallet.publicKey.toString(),
+        amount: amount,
+        termDays: termDays,
+        status: 'pending',
+        purpose: purpose,
+        createdAt: Date.now()
+      };
 
-        // After successful application, try to auto-approve/fund the loan for demonstration purposes
-        // In a real DAO system, this would be voted on by DAO members
-        try {
-          await this.approveLoanForDemo(wallet, loanAccountPDA, wallet.publicKey, amount);
-        } catch (approvalError) {
-          console.error("Loan was created but auto-approval failed:", approvalError);
-          // We'll still return the original signature as the loan application was successful
-        }
-        
-        return signature;
-      } catch (error: any) {
-        console.error('Error with blockchain transaction:', error);
-        
-        // Check if the error is related to the program not having enough funds
-        if (error.message?.includes('insufficient funds') || 
-            error.message?.includes('insufficient lamports')) {
-          throw new Error('The smart contract does not have enough funds to process this loan. Please try a smaller amount or fund the program.');
-        }
-        
-        throw error;
-      }
+      // Store loan in simulation service
+      simulationService.addLoan(loan);
+
+      // Simulate transfer from lender wallet
+      const transaction: LoanTransaction = {
+        id: `TX-${loanId}`,
+        loanId: loanId,
+        type: 'transfer',
+        amount: amount,
+        from: 'DahnMn7khqD73k8B3nhFp3MJxpZC5n5Spr6acdiLmSrv',
+        to: wallet.publicKey.toString(),
+        timestamp: Date.now(),
+        signature: `simulated_${Date.now()}`
+      };
+
+      // Store transaction in simulation service
+      simulationService.addTransaction(transaction);
+
+      // Update loan status to approved
+      loan.status = 'approved';
+      simulationService.addLoan(loan);
+
+      toast({
+        title: "Loan Application Successful",
+        description: `Your loan for ${amount / LAMPORTS_PER_SOL} SOL has been approved and funded.`,
+      });
+
+      return transaction.signature;
     } catch (error: any) {
       console.error('Error creating loan application:', error);
       toast({
         title: "Loan Application Error",
         description: error.message || "Failed to create loan application",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  },
+
+  // Get all loan applications for a user
+  async getUserLoans(userPubkey: PublicKey): Promise<LoanApplication[]> {
+    try {
+      return simulationService.getUserLoans(userPubkey);
+    } catch (error) {
+      console.error('Error fetching user loans:', error);
+      return [];
+    }
+  },
+
+  // Get loan details
+  async getLoanDetails(loanId: string): Promise<LoanApplication | null> {
+    try {
+      return simulationService.getLoanDetails(loanId);
+    } catch (error) {
+      console.error('Error fetching loan details:', error);
+      return null;
+    }
+  },
+
+  // Fund the program account
+  async fundProgram(
+    wallet: any,
+    amount: number
+  ): Promise<string> {
+    try {
+      if (!wallet.publicKey) throw new Error("Wallet not connected");
+
+      // Simulate funding transaction
+      const transaction: LoanTransaction = {
+        id: `TX-FUND-${Date.now()}`,
+        loanId: 'PROGRAM_FUND',
+        type: 'transfer',
+        amount: amount,
+        from: wallet.publicKey.toString(),
+        to: 'DahnMn7khqD73k8B3nhFp3MJxpZC5n5Spr6acdiLmSrv',
+        timestamp: Date.now(),
+        signature: `simulated_fund_${Date.now()}`
+      };
+
+      // Store transaction in simulation service
+      simulationService.addTransaction(transaction);
+
+      toast({
+        title: "Program Funded Successfully",
+        description: `You have funded the loan program with ${amount / LAMPORTS_PER_SOL} SOL.`,
+      });
+
+      return transaction.signature;
+    } catch (error: any) {
+      console.error('Error funding program:', error);
+      toast({
+        title: "Program Funding Error",
+        description: error.message || "Failed to fund program",
         variant: "destructive",
       });
       throw error;
@@ -276,77 +296,6 @@ export const loanProgramService = {
         variant: "destructive",
       });
       return null;
-    }
-  },
-
-  // Get all loan applications for a user (borrower)
-  async getUserLoans(userPubkey: PublicKey): Promise<LoanApplication[]> {
-    try {
-      console.log(`Fetching loans for user: ${userPubkey.toString()}`);
-      
-      // Find the loan account PDA
-      const [loanAccountPDA] = await this.findLoanAccountAddress(userPubkey);
-      
-      // Try to fetch the loan account data
-      try {
-        const accountInfo = await connection.getAccountInfo(loanAccountPDA);
-        
-        if (accountInfo && accountInfo.data.length > 0) {
-          // Deserialize the loan account data
-          // Skip the first byte which is the instruction type
-          const data = accountInfo.data.slice(1);
-          
-          // Create a buffer from the data
-          const buffer = Buffer.from(data);
-          
-          // Deserialize using borsh
-          const loanData = borsh.deserialize(
-            loanApplicationSchema,
-            buffer
-          ) as unknown as LoanAccount;
-          
-          // Convert to LoanApplication format
-          return [{
-            id: loanAccountPDA.toString(),
-            borrower: userPubkey.toString(),
-            amount: loanData.amount, // Keep as lamports for consistency
-            termDays: loanData.termDays,
-            status: loanData.isRepaid ? 'repaid' : 
-                  loanData.lender.toString() !== '11111111111111111111111111111111' ? 'approved' : 'pending',
-            purpose: 'Loan', // We don't store purpose in the on-chain data
-            createdAt: loanData.startTime || Date.now(),
-          }];
-        }
-      } catch (error) {
-        console.log('No on-chain loan data found, using simulation data');
-      }
-      
-      // If no on-chain data or error, return simulated data
-      const simulatedLoans: LoanApplication[] = [
-        {
-          id: `L-${userPubkey.toString().substring(0, 4)}1`,
-          borrower: userPubkey.toString(),
-          amount: 1000000000, // 1 SOL in lamports
-          termDays: 30,
-          status: 'pending',
-          purpose: 'Business Expansion',
-          createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000, // 2 days ago
-        },
-        {
-          id: `L-${userPubkey.toString().substring(0, 4)}2`,
-          borrower: userPubkey.toString(),
-          amount: 500000000, // 0.5 SOL in lamports
-          termDays: 15,
-          status: 'approved',
-          purpose: 'Investment',
-          createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000, // 5 days ago
-        }
-      ];
-      
-      return simulatedLoans;
-    } catch (error) {
-      console.error('Error fetching user loans:', error);
-      return [];
     }
   },
 
@@ -434,115 +383,13 @@ export const loanProgramService = {
     }
   },
 
-  // Fund the program account
-  async fundProgram(
-    wallet: any,
-    amount: number
-  ): Promise<string> {
+  // Get all transactions for a user
+  async getUserTransactions(userPubkey: PublicKey): Promise<LoanTransaction[]> {
     try {
-      if (!wallet.publicKey) throw new Error("Wallet not connected");
-
-      // Find the program fund account PDA
-      const [programFundPDA] = await PublicKey.findProgramAddressSync(
-        [bufferFrom('program_fund')],
-        LOAN_PROGRAM_ID
-      );
-
-      // Create instruction with LoanInstructionType.FundProgram
-      const dataBuffer = Buffer.alloc(9); // 1 byte for instruction + 8 bytes for amount
-      dataBuffer[0] = LoanInstructionType.FundProgram;
-      
-      // Write amount as a 64-bit little-endian unsigned integer
-      const amountBuffer = Buffer.alloc(8);
-      amountBuffer.writeBigUInt64LE(BigInt(amount), 0);
-      for (let i = 0; i < 8; i++) {
-        dataBuffer[i + 1] = amountBuffer[i];
-      }
-
-      // Create the transaction instruction
-      const instruction = new TransactionInstruction({
-        keys: [
-          { pubkey: wallet.publicKey, isSigner: true, isWritable: true },
-          { pubkey: programFundPDA, isSigner: false, isWritable: true },
-          { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-        ],
-        programId: LOAN_PROGRAM_ID,
-        data: dataBuffer,
-      });
-
-      // Create and send transaction
-      const transaction = new Transaction().add(instruction);
-      
-      // Get the latest blockhash
-      const { blockhash } = await connection.getLatestBlockhash();
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = wallet.publicKey;
-
-      // Sign and send transaction
-      const signature = await wallet.sendTransaction(transaction, connection);
-      
-      // Confirm transaction
-      await connection.confirmTransaction(signature, 'confirmed');
-      
-      console.log("Program funded with signature:", signature);
-      
-      toast({
-        title: "Program Funded Successfully",
-        description: `You have funded the loan program with ${amount} lamports.`,
-      });
-      
-      return signature;
-    } catch (error: any) {
-      console.error('Error funding program:', error);
-      toast({
-        title: "Program Funding Error",
-        description: error.message || "Failed to fund program",
-        variant: "destructive",
-      });
-      throw error;
+      return simulationService.getUserTransactions(userPubkey);
+    } catch (error) {
+      console.error('Error fetching user transactions:', error);
+      return [];
     }
   },
-  
-  // Get loan details
-  async getLoanDetails(loanId: string): Promise<LoanApplication | null> {
-    try {
-      // Convert loanId to PublicKey
-      const loanPDA = new PublicKey(loanId);
-      
-      // Fetch the loan account data
-      const accountInfo = await connection.getAccountInfo(loanPDA);
-      
-      if (!accountInfo || accountInfo.data.length === 0) {
-        return null;
-      }
-      
-      // Deserialize the loan account data
-      // Skip the first byte which is the instruction type
-      const data = accountInfo.data.slice(1);
-      
-      // Create a buffer from the data
-      const buffer = Buffer.from(data);
-      
-      // Deserialize using borsh
-      const loanData = borsh.deserialize(
-        loanApplicationSchema,
-        buffer
-      ) as unknown as LoanAccount;
-      
-      // Convert to LoanApplication format
-      return {
-        id: loanPDA.toString(),
-        borrower: loanData.borrower.toString(),
-        amount: loanData.amount,
-        termDays: loanData.termDays,
-        status: loanData.isRepaid ? 'repaid' : 
-               loanData.lender.toString() !== '11111111111111111111111111111111' ? 'approved' : 'pending',
-        purpose: 'Loan', // We don't store purpose in the on-chain data
-        createdAt: loanData.startTime || Date.now(),
-      };
-    } catch (error) {
-      console.error('Error fetching loan details:', error);
-      return null;
-    }
-  }
 };
